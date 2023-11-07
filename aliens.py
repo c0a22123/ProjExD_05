@@ -25,7 +25,7 @@ Controls
 
 import random
 import os
-
+import pygame.font
 # import basic pygame modules
 import pygame as pg
 
@@ -159,7 +159,7 @@ class Add_Enemy(pg.sprite.Sprite):
         self.facing = random.choice((-1, 1)) * Add_Enemy.speed
         self.frame = 0
         if self.facing < 0:
-            self.rect.right = SCREENRECT.right
+            self.rect.  ht = SCREENRECT.right
 
     def update(self):
         self.rect.move_ip(self.facing, 0)
@@ -309,13 +309,13 @@ def main(winstyle=0):
     bestdepth = pg.display.mode_ok(SCREENRECT.size, winstyle, 32)
     screen = pg.display.set_mode(SCREENRECT.size, winstyle, bestdepth)
     
-    # Load images, assign to sprite classes
+    # Load images, assign to sprite classesa
     # (do this before the classes are used, after screen setup)
-    img = load_image("player1.gif") 
+    img = load_image("kk.gif") 
     Player.images = [img, pg.transform.flip(img, 1, 0)]
     img = load_image("explosion1.gif")
     Explosion.images = [img, pg.transform.flip(img, 1, 1)]
-    Alien.images = [load_image(im) for im in ("alien1.gif", "alien2.gif", "alien3.gif")]
+    Alien.images = [load_image(im) for im in ("kamata.gif", "kamata.gif", "kamata.gif")]
     Add_Enemy.image = load_image("chimp.png")
     Bomb.images = [load_image("bomb.gif")]
     Item.images = [load_image_roto("item.gif") ]
@@ -410,6 +410,7 @@ def main(winstyle=0):
                     fullscreen = not fullscreen
 
         keystate = pg.key.get_pressed()
+        
 
         # clear/erase the last drawn sprites
         all.clear(screen, background)
