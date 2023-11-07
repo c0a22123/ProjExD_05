@@ -29,6 +29,7 @@ import os
 # import basic pygame modules
 import pygame as pg
 
+
 # see if we can load more than standard BMP
 if not pg.image.get_extended():
     raise SystemExit("Sorry, extended image module required")
@@ -56,6 +57,15 @@ def load_image(file):
         raise SystemExit('Could not load image "%s" %s' % (file, pg.get_error()))
     return surface.convert()
 
+def load_image_roto(file):
+    """loads an image, prepares it for play"""
+    file = os.path.join(main_dir, "data", file)
+    try:
+        surface = pg.image.load(file)
+        surface = pg.transform.rotozoom(surface, 0, 0.05)
+    except pg.error:
+        raise SystemExit('Could not load image "%s" %s' % (file, pg.get_error()))
+    return surface.convert()
 
 def load_sound(file):
     """because pygame can be be compiled without mixer."""
@@ -232,6 +242,32 @@ class Bomb(pg.sprite.Sprite):
             Explosion(self)
             self.kill()
 
+class Item(pg.sprite.Sprite): 
+    """A bomb the aliens drop."""
+
+    speed = 9
+    images = []
+
+    def __init__(self, alien):
+        pg.sprite.Sprite.__init__(self, self.containers)
+        self.image = self.images[0]
+        self.rect = self.image.get_rect(midbottom=alien.rect.move(0, 5).midbottom)
+        self.image=pg.transform.scale(self.image,(30,30)) 
+        
+
+    def update(self):
+        """called every time around the game loop.
+
+        Every frame we move the sprite 'rect' down
+        When it reaches the bottom we:
+
+        - make an explosion.
+        - remove the Bomb.
+        """
+        self.rect.move_ip(0, self.speed)
+        if self.rect.bottom >= 470:
+            Explosion(self)
+            self.kill()
 
 class Score(pg.sprite.Sprite):
     """to keep track of the score."""
@@ -251,6 +287,10 @@ class Score(pg.sprite.Sprite):
             self.lastscore = SCORE
             msg = "Score: %d" % SCORE
             self.image = self.font.render(msg, 0, self.color)
+
+
+
+
 
 
 def main(winstyle=0):
@@ -278,7 +318,9 @@ def main(winstyle=0):
     Alien.images = [load_image(im) for im in ("alien1.gif", "alien2.gif", "alien3.gif")]
     Add_Enemy.image = load_image("chimp.png")
     Bomb.images = [load_image("bomb.gif")]
+    Item.images = [load_image_roto("item.gif") ]
     Shot.images = [load_image("shot.gif")]
+
 
     # decorate the game window
     icon = pg.transform.scale(Alien.images[0], (32, 32))
@@ -307,8 +349,10 @@ def main(winstyle=0):
     addenemys = pg.sprite.Group()
     shots = pg.sprite.Group()
     bombs = pg.sprite.Group()
+    items = pg.sprite.Group()
     all = pg.sprite.RenderUpdates()
     lastalien = pg.sprite.GroupSingle()
+    
 
     # assign default groups to each sprite class
     Player.containers = all
@@ -316,8 +360,10 @@ def main(winstyle=0):
     Add_Enemy.containers = addenemys, all, lastalien
     Shot.containers = shots, all
     Bomb.containers = bombs, all
+    Item.containers = items ,all 
     Explosion.containers = all
     Score.containers = all
+    Item.containers = items, all
 
     # Create Some Starting Values
     global score
@@ -327,6 +373,7 @@ def main(winstyle=0):
     # initialize our starting sprites
     global SCORE
     player = Player()
+    
     Alien()  # note, this 'lives' because it goes into a sprite group
     if pg.font:
         all.add(Score())
@@ -338,7 +385,7 @@ def main(winstyle=0):
     while player.alive():
 
         # get input
-        for event in pg.event.get():
+        for event in pg.event.get():  
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
@@ -407,6 +454,8 @@ def main(winstyle=0):
         # Drop bombs
         if lastalien and not int(random.random() * BOMB_ODDS):
             Bomb(lastalien.sprite)
+        if lastalien and not int(random.random() * BOMB_ODDS):
+            Item(lastalien.sprite)
 
         # Detect collisions between aliens and players.
         for alien in pg.sprite.spritecollide(player, aliens, 1):
@@ -434,6 +483,12 @@ def main(winstyle=0):
                 Shot(player.gunpos()) #playerがshotする
             Explosion(alien)
             SCORE = SCORE + 1
+        #追加
+        for alien in pg.sprite.groupcollide(aliens, shots, 1, 1).keys():
+            if pg.mixer:
+                boom_sound.play()
+            Explosion(alien)
+            SCORE = SCORE + 1
 
         # See if shots hit the addenemy(ぱっちぃ).
         for addenemy in pg.sprite.groupcollide(addenemys, shots, 1, 1).keys():
@@ -450,6 +505,15 @@ def main(winstyle=0):
             Explosion(player)
             Explosion(bomb)
             player.kill()
+
+        for bomb in pg.sprite.spritecollide(player, items, 1):
+            if pg.mixer:
+                boom_sound.play()
+            Explosion(player)
+            Explosion(bomb)
+            SCORE =SCORE +1
+    
+            
 
         # draw the scene
         dirty = all.draw(screen)
