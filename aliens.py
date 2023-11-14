@@ -29,7 +29,6 @@ import pygame.font
 # import basic pygame modules
 import pygame as pg
 
-
 # see if we can load more than standard BMP
 if not pg.image.get_extended():
     raise SystemExit("Sorry, extended image module required")
@@ -159,15 +158,14 @@ class Add_Enemy(pg.sprite.Sprite):
         self.facing = random.choice((-1, 1)) * Add_Enemy.speed
         self.frame = 0
         if self.facing < 0:
-            self.rect.  ht = SCREENRECT.right
+            self.rect.right = SCREENRECT.right
 
     def update(self):
         self.rect.move_ip(self.facing, 0)
         if not SCREENRECT.contains(self.rect):
             self.facing = -self.facing
             self.rect.top = self.rect.bottom + 1
-            self.rect = self.rect.clamp(SCREENRECT)
-        
+            self.rect = self.rect.clamp(SCREENRECT)       
 
 class Explosion(pg.sprite.Sprite):
     """An explosion. Hopefully the Alien and not the player!"""
@@ -289,12 +287,7 @@ class Score(pg.sprite.Sprite):
             self.image = self.font.render(msg, 0, self.color)
 
 
-
-
-
-
 def main(winstyle=0):
-
     # Initialize pygame
     if pg.get_sdl_version()[0] == 2:
         pg.mixer.pre_init(44100, 32, 2, 1024)
@@ -307,20 +300,19 @@ def main(winstyle=0):
     # Set the display mode
     winstyle = 0  # |FULLSCREEN
     bestdepth = pg.display.mode_ok(SCREENRECT.size, winstyle, 32)
-    screen = pg.display.set_mode(SCREENRECT.size, winstyle, bestdepth)
-    
-    # Load images, assign to sprite classesa
+    screen = pg.display.set_mode(SCREENRECT.size, winstyle, bestdepth)    
+
+    # Load images, assign to sprite classes
     # (do this before the classes are used, after screen setup)
     img = load_image("kk.gif") 
     Player.images = [img, pg.transform.flip(img, 1, 0)]
     img = load_image("explosion1.gif")
     Explosion.images = [img, pg.transform.flip(img, 1, 1)]
     Alien.images = [load_image(im) for im in ("kamata.gif", "kamata.gif", "kamata.gif")]
-    Add_Enemy.image = load_image("chimp.png")
+    Add_Enemy.image = load_image("pachi.png")
     Bomb.images = [load_image("bomb.gif")]
     Item.images = [load_image_roto("item.gif") ]
     Shot.images = [load_image("shot.gif")]
-
 
     # decorate the game window
     icon = pg.transform.scale(Alien.images[0], (32, 32))
@@ -352,7 +344,6 @@ def main(winstyle=0):
     items = pg.sprite.Group()
     all = pg.sprite.RenderUpdates()
     lastalien = pg.sprite.GroupSingle()
-    
 
     # assign default groups to each sprite class
     Player.containers = all
@@ -373,7 +364,6 @@ def main(winstyle=0):
     # initialize our starting sprites
     global SCORE
     player = Player()
-    
     Alien()  # note, this 'lives' because it goes into a sprite group
     if pg.font:
         all.add(Score())
@@ -410,7 +400,6 @@ def main(winstyle=0):
                     fullscreen = not fullscreen
 
         keystate = pg.key.get_pressed()
-        
 
         # clear/erase the last drawn sprites
         all.clear(screen, background)
@@ -497,7 +486,6 @@ def main(winstyle=0):
                 boom_sound.play()
                 Explosion(addenemy)
                 SCORE = SCORE + 10
-            
 
         # See if alien boms hit the player.
         for bomb in pg.sprite.spritecollide(player, bombs, 1):
@@ -513,13 +501,10 @@ def main(winstyle=0):
             Explosion(player)
             Explosion(bomb)
             SCORE =SCORE +1
-    
-            
 
         # draw the scene
         dirty = all.draw(screen)
         pg.display.update(dirty)
-
 
         # cap the framerate at 40fps. Also called 40HZ or 40 times per second.
         clock.tick(40)
